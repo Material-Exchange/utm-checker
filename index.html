@@ -20,6 +20,7 @@
         .warning-param::after {
             content: '⚠️';
             margin-left: 5px;
+            cursor: help;
         }
         table {
             border-collapse: separate;
@@ -27,19 +28,17 @@
         }
         td, th {
             border: 1px solid #E5E3DB;
+            padding: 0.75rem;
         }
         .url-cell {
-            max-width: 200px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            word-break: break-all;
         }
     </style>
 </head>
 <body class="p-4">
     <div class="max-w-7xl mx-auto">
         <h1 class="text-3xl font-bold mb-4">UTM Parameter Checker</h1>
-        <textarea id="urlInput" rows="5" class="w-full p-2 border rounded mb-4" placeholder="Enter URLs, one per line"></textarea>
+        <textarea id="urlInput" rows="5" class="w-full p-2 border rounded mb-4" style="width: 80%" placeholder="Enter URLs, one per line"></textarea>
         <div id="results" class="mt-8"></div>
     </div>
 
@@ -47,7 +46,7 @@
         const validSources = [
             'linkedin', 'google', 'intercom', 'twitter', 'frank-kiosk', 'frank-toy',
             'material-poster', 'material-sample', 'sample-box', 'business-jar',
-            'bar-sticker', 'textile-exchange', 'novu'
+            'bar-sticker', 'textile-exchange', 'novu', 'facebook', 'instagram', 'wechat'
         ];
 
         const validMediums = [
@@ -99,27 +98,29 @@
                 }
             });
 
+            const warningMessage = "This parameter should only contain lowercase letters, numbers, and hyphens. No spaces or special characters are allowed.";
+
             const table = `
                 <table class="w-full bg-white text-sm">
                     <thead>
                         <tr class="bg-gray-200">
-                            <th class="p-2">URL</th>
-                            <th class="p-2">UTM Source</th>
-                            <th class="p-2">UTM Medium</th>
-                            <th class="p-2">UTM Campaign</th>
-                            <th class="p-2">UTM Content</th>
-                            <th class="p-2">UTM Term</th>
+                            <th class="p-3">URL</th>
+                            <th class="p-3">UTM Source</th>
+                            <th class="p-3">UTM Medium</th>
+                            <th class="p-3">UTM Campaign</th>
+                            <th class="p-3">UTM Content</th>
+                            <th class="p-3">UTM Term</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${results.map(result => `
                             <tr>
-                                <td class="p-2 url-cell" title="${result.url}">${result.url}</td>
-                                <td class="p-2 ${result.utm_source_valid ? 'valid-param' : 'invalid-param'}">${result.utm_source}</td>
-                                <td class="p-2 ${result.utm_medium_valid ? 'valid-param' : 'invalid-param'}">${result.utm_medium}</td>
-                                <td class="p-2 ${result.utm_campaign === '' ? 'invalid-param' : (result.utm_campaign_valid ? 'valid-param' : 'warning-param')}">${result.utm_campaign}</td>
-                                <td class="p-2 ${result.utm_content_valid ? 'valid-param' : 'warning-param'}">${result.utm_content}</td>
-                                <td class="p-2 ${result.utm_term_valid ? 'valid-param' : 'warning-param'}">${result.utm_term}</td>
+                                <td class="url-cell">${result.url}</td>
+                                <td class="${result.utm_source_valid ? 'valid-param' : 'invalid-param'}">${result.utm_source}</td>
+                                <td class="${result.utm_medium_valid ? 'valid-param' : 'invalid-param'}">${result.utm_medium}</td>
+                                <td class="${result.utm_campaign === '' ? 'invalid-param' : (result.utm_campaign_valid ? 'valid-param' : 'warning-param')}" title="${!result.utm_campaign_valid ? warningMessage : ''}">${result.utm_campaign}</td>
+                                <td class="${result.utm_content_valid ? 'valid-param' : 'warning-param'}" title="${!result.utm_content_valid ? warningMessage : ''}">${result.utm_content}</td>
+                                <td class="${result.utm_term_valid ? 'valid-param' : 'warning-param'}" title="${!result.utm_term_valid ? warningMessage : ''}">${result.utm_term}</td>
                             </tr>
                         `).join('')}
                     </tbody>
