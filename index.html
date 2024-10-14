@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTM Parameter Checker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        body {
+            background-color: #F1EFE7;
+        }
+        .valid-param::after {
+            content: '✅';
+            margin-left: 5px;
+        }
+        .invalid-param::after {
+            content: '❌';
+            margin-left: 5px;
+        }
+        .warning-param::after {
+            content: '⚠️';
+            margin-left: 5px;
+        }
+        table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        td, th {
+            border: 1px solid #E5E3DB;
+        }
+        .url-cell {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body class="p-4">
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-3xl font-bold mb-4">UTM Parameter Checker</h1>
+        <textarea id="urlInput" rows="5" class="w-full p-2 border rounded mb-4" placeholder="Enter URLs, one per line"></textarea>
+        <div id="results" class="mt-8"></div>
+    </div>
+
+    <script>
+        const validSources = [
+            'linkedin', 'google', 'intercom', 'twitter', 'frank-kiosk', 'frank-toy',
+            'material-poster', 'material-sample', 'sample-box', 'business-jar',
+            'bar-sticker', 'textile-exchange', 'novu'
+        ];
+
+        const validMediums = [
+            'paid-search', 'paid-social', 'organic-social', 'email', 'qrcode', 'forum'
+        ];
+
+        function isValidFormat(str) {
+            return /^[a-z0-9-]+$/.test(str);
+        }
+
+        function checkURLs() {
+            const urls = document.getElementById('urlInput').value.split('\n').filter(url => url.trim() !== '');
+            const results = urls.map(url => {
+                try {
+                    const parsedUrl = new URL(url.trim());
+                    const params = new URLSearchParams(parsedUrl.search);
+                    const utm_source = params.get('utm_source') || '';
+                    const utm_medium = params.get('utm_medium') || '';
+                    const utm_campaign = params.get('utm_campaign') || '';
+                    const utm_content = params.get('utm_content') || '';
+                    const utm_term = params.get('utm_term') || '';
+                    return {
+                        url: url.trim(),
+                        utm_source: utm_source,
+                        utm_source_valid: validSources.includes(utm_source.toLowerCase()),
+                        utm_medium: utm_medium,
+                        utm_medium_valid: validMediums.includes(utm_medium.toLowerCase()),
+                        utm_campaign: utm_campaign,
+                        utm_campaign_valid: utm_campaign !== '' && isValidFormat(utm_campaign),
+                        utm_content: utm_content,
+                        utm_content_valid: utm_content === '' || isValidFormat(utm_content),
+                        utm_term: utm_term,
+                        utm_term_valid: utm_term === '' || isValidFormat(utm_term)
+                    };
+                } catch (error) {
+                    return {
+                        url: url.trim(),
+                        utm_source: 'Invalid URL',
+                        utm_source_valid: false,
+                        utm_medium: 'Invalid URL',
+                        utm_medium_valid: false,
+                        utm_campaign: 'Invalid URL',
+                        utm_campaign_valid: false,
+                        utm_content: 'Invalid URL',
+                        utm_content_valid: false,
+                        utm_term: 'Invalid URL',
+                        utm_term_valid: false
+                    };
+                }
+            });
+
+            const table = `
+                <table class="w-full bg-white text-sm">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="p-2">URL</th>
+                            <th class="p-2">UTM Source</th>
+                            <th class="p-2">UTM Medium</th>
+                            <th class="p-2">UTM Campaign</th>
+                            <th class="p-2">UTM Content</th>
+                            <th class="p-2">UTM Term</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${results.map(result => `
+                            <tr>
+                                <td class="p-2 url-cell" title="${result.url}">${result.url}</td>
+                                <td class="p-2 ${result.utm_source_valid ? 'valid-param' : 'invalid-param'}">${result.utm_source}</td>
+                                <td class="p-2 ${result.utm_medium_valid ? 'valid-param' : 'invalid-param'}">${result.utm_medium}</td>
+                                <td class="p-2 ${result.utm_campaign === '' ? 'invalid-param' : (result.utm_campaign_valid ? 'valid-param' : 'warning-param')}">${result.utm_campaign}</td>
+                                <td class="p-2 ${result.utm_content_valid ? 'valid-param' : 'warning-param'}">${result.utm_content}</td>
+                                <td class="p-2 ${result.utm_term_valid ? 'valid-param' : 'warning-param'}">${result.utm_term}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('results').innerHTML = table;
+        }
+
+        document.getElementById('urlInput').addEventListener('input', checkURLs);
+    </script>
+</body>
+</html>
